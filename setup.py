@@ -31,10 +31,8 @@ def get_install_requires(
 
 def find_version(file_path: Path = VERSION_FILE_PATH) -> str:
     file_content = file_path.open("r").read()
-    version_match = re.search(VERSION_REGEX, file_content, re.M)
-
-    if version_match:
-        return version_match.group(1)
+    if version_match := re.search(VERSION_REGEX, file_content, re.M):
+        return version_match[1]
     raise RuntimeError(f"Unable to find version string in {file_path}")
 
 

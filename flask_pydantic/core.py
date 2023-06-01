@@ -83,15 +83,13 @@ def validate_path_params(func: Callable, kwargs: dict) -> Tuple[dict, list]:
             err = e.errors()[0]
             err["loc"] = [name]
             errors.append(err)
-    kwargs = {**kwargs, **validated}
+    kwargs |= validated
     return kwargs, errors
 
 
 def get_body_dict(**params):
     data = request.get_json(**params)
-    if data is None and params.get("silent"):
-        return {}
-    return data
+    return {} if data is None and params.get("silent") else data
 
 
 def validate(
@@ -242,14 +240,13 @@ def validate(
                     "FLASK_PYDANTIC_VALIDATION_ERROR_RAISE", False
                 ):
                     raise FailedValidation(**err)
-                else:
-                    status_code = current_app.config.get(
-                        "FLASK_PYDANTIC_VALIDATION_ERROR_STATUS_CODE", 400
-                    )
-                    return make_response(
-                        jsonify({"validation_error": err}),
-                        status_code
-                    )
+                status_code = current_app.config.get(
+                    "FLASK_PYDANTIC_VALIDATION_ERROR_STATUS_CODE", 400
+                )
+                return make_response(
+                    jsonify({"validation_error": err}),
+                    status_code
+                )
             res = func(*args, **kwargs)
 
             if response_many:
@@ -274,7 +271,7 @@ def validate(
 
             if (
                 isinstance(res, tuple)
-                and len(res) in [2, 3]
+                and len(res) in {2, 3}
                 and isinstance(res[0], BaseModel)
             ):
                 headers = None
